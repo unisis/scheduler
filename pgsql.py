@@ -10,7 +10,7 @@ class Postgresql():
         self.logger = None
         # Load database connection details
         config = ConfigParser.ConfigParser()
-        config.read('/etc/scheduler_db.conf')
+        config.read('/etc/scheduler.conf')
         self.hostname = config.get('connection', 'hostname', 'localhost')
         self.username = config.get('connection', 'username', 'postgres')
         self.password = config.get('connection', 'password', 'postgres')
@@ -37,12 +37,18 @@ class Postgresql():
 
     def query_one(self, query):
         result = self.query_all(query)
+        if not result:
+            return None
         return result[0]
 
     def query_all(self, query):
         result = self.execute(query)
         records = result.fetchall()
         return records
+
+    def insert(self, query):
+        query += " RETURNING id"
+        return self.query_scalar(query)
 
     def execute(self, query):
         cursor = self.conn.cursor()
