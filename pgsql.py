@@ -3,7 +3,7 @@ import pgdb
 import os
 import ConfigParser
 
-class Postgresql():
+class Pgsql():
 
     def __init__(self):
         self.conn = None
@@ -11,10 +11,10 @@ class Postgresql():
         # Load database connection details
         config = ConfigParser.ConfigParser()
         config.read('/etc/scheduler.conf')
-        self.hostname = config.get('connection', 'hostname', 'localhost')
-        self.username = config.get('connection', 'username', 'postgres')
-        self.password = config.get('connection', 'password', 'postgres')
-        self.database = config.get('connection', 'database', 'odoo')
+        self.hostname = config.get('pgsql', 'hostname', 'localhost')
+        self.username = config.get('pgsql', 'username', 'postgres')
+        self.password = config.get('pgsql', 'password', 'postgres')
+        self.database = config.get('pgsql', 'database', 'odoo')
 
     def connect(self):
         try:
@@ -26,7 +26,7 @@ class Postgresql():
             conn = pgdb.connect(host=self.hostname, user=self.username, password=self.password, database=self.database)
             self.conn = conn
         except:
-            message = "Couldn't connect to Postgresql"
+            message = "Couldn't connect to Postgresql!"
             self.logger.error(message)
             raise Exception(message)
 

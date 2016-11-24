@@ -23,15 +23,19 @@ The scheduler launch separated processes to perform the job_task tasks.
 
 - nano /etc/scheduler.conf and create the connection info:
 
-  [general]
-  models=/home/leandro/Code/unison/unison/models
-
-  [connection]
+  [pgsql]
   hostname=localhost
   username=postgres
   password=postgres
   database=odoo
 
+  [odoo]
+  hostname=localhost
+  username=admin   
+  password=admin
+  database=odoo
+  port=8069
+  https=0
 
 ## Use (run in a screen)
 

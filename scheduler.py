@@ -6,11 +6,11 @@ import logging
 import time
 import os
 import ConfigParser
-import imp
 
 # Third party libs
 from daemon import runner
-from pgsql import Postgresql
+from pgsql import Pgsql
+from odoo import Odoo
 
 class App():
    
@@ -27,17 +27,17 @@ class App():
     def run(self):
         logger.info("Starting Scheduler service")
 
-        # Initialize Postgresql
-        pgsql = Postgresql()
+        # Initialize Pgsql service
+        pgsql = Pgsql()
         pgsql.logger = self.logger
         pgsql.connect()
-        logger.info("Connected to Postgresql")
+        logger.info("Connected to Pgsql!")
 
-        # Load location of models
-        config = ConfigParser.ConfigParser()
-        config.read('/etc/scheduler.conf')
-        self.models = config.get('general', 'models', '')
-        logger.info("Location of models is " + self.models)
+        # Initialize Odoo service
+        odoo = Odoo()
+        odoo.logger = self.logger
+        odoo.connect()
+        logger.info("Connected to Odoo!")
 
         logger.info("UniSon Scheduler initialized")
 
@@ -86,11 +86,9 @@ class App():
                         job_id = pgsql.insert(query)
                         logger.info("Generated Job with id " + str(job_id))
 
-                        # Request to model insert the tasks related to this job
-                        model_path = self.models + "/" + job_type.model_file
-                        logger.info("Requesting tasks to model on file " + model_path)
-                        model = imp.load_source("unison." + job_type.model_name, model_path)
-                        model.create_job_tasks(job_id)
+                        # Request via XML-RPC to that model insert the tasks related to this job
+                        logger.info("Requesting tasks to model " + job_type.model_name + " (id " + str(record.id) + ")")
+                        odoo.create_job_tasks(job_type.model_name, record.id, job_id)
            
             # Wait before read again
             self.logger.info("Waiting " + str(self.idle_wait_secs) + " seconds ...")
