@@ -43,9 +43,13 @@ class Odoo():
             self.logger.error(message)
             raise Exception(message)
 
-    def create_job_tasks(self, model_name, model_id, job_id):
+    def create_job_tasks(self, model_name, model_id, job_type_id, job_id):
         # See http://erppeek.readthedocs.io/en/latest/api.html
         model_proxy = self.client.model(model_name)
         instance = model_proxy.browse(model_id)
-        instance.create_job_tasks(job_id)
+        instance.create_job_tasks(job_type_id, job_id)
+        return True
+
+    def execute(self, model_name, model_id, function, parallel):
+        # TO-DO Implement
         return True

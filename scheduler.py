@@ -47,7 +47,7 @@ class App():
             # it's a job type which is only manually executed
             job_types = pgsql.query_all("SELECT * FROM unison_job_type WHERE coalesce(trigger_event, '') <> '' OR coalesce(trigger_frequency, 0) > 0")
             for job_type in job_types:
-                logger.info("Processing job '" + job_type.name + "'")
+                # logger.info("Processing job '" + job_type.name + "'")
                 # Check all instances of the model related to the job_type
                 table_name = job_type.table_name
                 records = pgsql.query_all("SELECT id, name, write_date, active FROM " + table_name)
@@ -88,8 +88,16 @@ class App():
 
                         # Request via XML-RPC to that model insert the tasks related to this job
                         logger.info("Requesting tasks to model " + job_type.model_name + " (id " + str(record.id) + ")")
-                        odoo.create_job_tasks(job_type.model_name, record.id, job_id)
+                        odoo.create_job_tasks(job_type.model_name, record.id, job_type.id, job_id)
            
+            # We have created any new jobs and their tasks. Now, for each new job (not started yet) 
+            # we will launch a separate process to control their tasks (so jobs can be executed in parallel)
+            query = "SELECT * FROM unison_job WHERE date_start IS NULL"
+            new_jobs = pgsql.query_all(query)
+            for new_job in new_jobs:
+                # Launch a new executor instance for this job
+                # TO-DO
+
             # Wait before read again
             self.logger.info("Waiting " + str(self.idle_wait_secs) + " seconds ...")
             time.sleep(float(int(self.idle_wait_secs)))
