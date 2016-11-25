@@ -37,12 +37,11 @@ The scheduler launch separated processes to perform the job_task tasks.
   port=8069
   https=0
 
-## Use (run in a screen)
+## Execution
 
-- python scheduler.py
-
-If you want run this software as a service, edit scheduler.py and put self.run_as_daemon=true. Then you can use:
 - python scheduler.py start
-- python scheduler.py restart
-- python scheduler.py stop
-  NOTE: Support for "status" should be provided on the LSB script
+- cat /var/log/scheduler.log
+
+NOTE: "restart" and "stop" operations are also available (but not "status")
+
+TIP: During development, we can use "print" to show the output on the console (logger sends the events to the file /var/log/scheduler.log)

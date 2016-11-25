@@ -50,6 +50,12 @@ class Odoo():
         instance.create_job_tasks(job_type_id, job_id)
         return True
 
-    def execute(self, model_name, model_id, function, parallel):
-        # TO-DO Implement
-        return True
+    def execute(self, model_name, model_id, function):
+        model_proxy = self.client.model(model_name)
+        instance = model_proxy.browse(model_id)
+        method = getattr(instance, function)
+        try:
+            method()
+            return True
+        except:
+            return False

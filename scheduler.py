@@ -1,3 +1,4 @@
+
 # To kick off the script, run the following from the python directory:
 #   PYTHONPATH=`pwd` python scheduler.py start
 
@@ -5,6 +6,8 @@
 import logging
 import time
 import os
+import sys
+import subprocess
 import ConfigParser
 
 # Third party libs
@@ -18,9 +21,9 @@ class App():
         self.stdin_path = '/dev/null'
         self.stdout_path = '/dev/tty'
         self.stderr_path = '/dev/tty'
-        self.pidfile_path =  '/var/run/scheduler/scheduler.pid'
+        self.pidfile_path =  '/var/run/scheduler.pid'
         self.pidfile_timeout = 5
-        self.run_as_daemon = False # False = Run on Foreground
+        self.run_as_daemon = True # False = Run on Foreground
         self.logger = None
         self.idle_wait_secs = os.environ.get('IDLE_WAIT_SECS', 1)
            
@@ -68,7 +71,7 @@ class App():
                         # However, if the event is 'delete' and the record is still active, we will not perform any check (the trigger event was not fired yet)
                         if not (record.active and job_type.trigger_event == "delete"):
                             # Check if there are a job created for the insert event or for the delete event (record was deleted)
-                            query = "SELECT COUNT(*) FROM unison_job WHERE job_type_id = " + str(job_type.id) + " AND model_id = " + str(record.id) + " AND (success = True OR date_end IS NULL)"
+                            query = "SELECT COUNT(*) FROM unison_job WHERE job_type_id = " + str(job_type.id) + " AND model_id = " + str(record.id)
                             if job_type.trigger_event == "update":
                                 # This is an 'update' event which can occurs many times, also check that job was created after the last update date of the model instance
                                 query += " AND write_date > " + record.update_date
@@ -95,8 +98,11 @@ class App():
             query = "SELECT * FROM unison_job WHERE date_start IS NULL"
             new_jobs = pgsql.query_all(query)
             for new_job in new_jobs:
-                # Launch a new executor instance for this job
-                # TO-DO
+                # Mark the job as started
+                pgsql.execute("UPDATE unison_job SET date_start = current_timestamp WHERE id = " + str(new_job.id))
+                # Launch a new executor instance for this job in background to execute their tasks
+                script = sys.path[0] + "/execute_job.py"
+                subprocess.Popen(["python", script, str(new_job.id)])
 
             # Wait before read again
             self.logger.info("Waiting " + str(self.idle_wait_secs) + " seconds ...")
